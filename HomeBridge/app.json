@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "HomeBridge",
+    "slug": "homebridge-coparenting",
+    "version": "0.2.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F7F6F1"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "uk.homebridge.coparenting"
+    },
+    "android": {
+      "package": "uk.homebridge.coparenting",
+      "adaptiveIcon": {
+        "backgroundColor": "#F7F6F1",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
