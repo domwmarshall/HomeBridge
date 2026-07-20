@@ -1,4 +1,7 @@
-export type TabKey = 'today' | 'calendar' | 'things' | 'handover' | 'eva';
+export type TabKey = 'today' | 'calendar' | 'things' | 'handover' | 'child';
+
+export type ParentLabel = 'Dad' | 'Mum';
+export type ResponsibleParent = ParentLabel | 'Both';
 
 export type HouseholdLocation =
   | "Dad's house"
@@ -18,7 +21,23 @@ export type ItemCategory =
   | 'Medical'
   | 'Other';
 
+export type EventCategory =
+  | 'School'
+  | 'Handover'
+  | 'Party'
+  | 'Trip'
+  | 'Medical'
+  | 'Holiday';
+
 export type SyncState = 'local' | 'connecting' | 'synced' | 'offline' | 'error';
+
+export interface PickedPhoto {
+  uri: string;
+  fileName?: string | null;
+  mimeType?: string | null;
+  width?: number;
+  height?: number;
+}
 
 export interface HouseholdMember {
   userId: string;
@@ -33,9 +52,10 @@ export interface Workspace {
   childId: string;
   userId: string;
   displayName: string;
-  parentLabel?: string;
+  parentLabel?: ParentLabel;
+  role: HouseholdMember['role'];
   members: HouseholdMember[];
-  createInvite: (parentLabel: string) => Promise<string>;
+  createInvite: (parentLabel: ParentLabel) => Promise<string>;
   refreshWorkspace: () => Promise<void>;
 }
 
@@ -47,7 +67,7 @@ export interface ChildProfile {
   className: string;
   currentHousehold: "Dad's house" | "Mum's house";
   nextHandoverAt: string;
-  nextHandoverTo: 'Dad' | 'Mum';
+  nextHandoverTo: ParentLabel;
   collectionPlan: string;
   allergies: string[];
   clothingSize: string;
@@ -59,8 +79,8 @@ export interface CalendarEvent {
   title: string;
   startsAt: string;
   endsAt?: string;
-  category: 'School' | 'Handover' | 'Party' | 'Trip' | 'Medical' | 'Holiday';
-  responsibleParent: 'Dad' | 'Mum' | 'Both';
+  category: EventCategory;
+  responsibleParent: ResponsibleParent;
   location?: string;
   acknowledged: boolean;
   notes?: string;
@@ -73,7 +93,8 @@ export interface TrackedItem {
   quantity: number;
   location: HouseholdLocation;
   neededAt?: HouseholdLocation;
-  imageEmoji: string;
+  photoPath?: string;
+  photoUrl?: string;
   minimumAtDad?: number;
   minimumAtMum?: number;
   notes?: string;
@@ -95,6 +116,9 @@ export interface MedicalItem {
   quantity: number;
   lastCheckedAt: string;
   replacementStatus: 'OK' | 'Due soon' | 'Requested' | 'Replaced';
+  photoPath?: string;
+  photoUrl?: string;
+  notes?: string;
 }
 
 export interface AppState {
@@ -105,4 +129,38 @@ export interface AppState {
   medicalItems: MedicalItem[];
   handoverNote: string;
   activeHandoverId?: string;
+}
+
+export type NewCalendarEvent = Omit<CalendarEvent, 'id' | 'acknowledged'>;
+export type EditableCalendarEvent = Omit<CalendarEvent, 'acknowledged'>;
+
+export interface ItemInput {
+  name: string;
+  category: ItemCategory;
+  quantity: number;
+  location: HouseholdLocation;
+  neededAt?: HouseholdLocation;
+  minimumAtDad?: number;
+  minimumAtMum?: number;
+  notes?: string;
+  photo?: PickedPhoto;
+}
+
+export interface MedicalItemInput {
+  name: string;
+  location: HouseholdLocation;
+  expiryDate: string;
+  quantity: number;
+  replacementStatus: MedicalItem['replacementStatus'];
+  notes?: string;
+  photo?: PickedPhoto;
+}
+
+export interface ChildProfileInput {
+  name: string;
+  school: string;
+  className: string;
+  allergies: string[];
+  clothingSize: string;
+  shoeSize: string;
 }

@@ -16,7 +16,7 @@ export function AppHeader({ title, subtitle }: { title: string; subtitle?: strin
   return (
     <View style={styles.wrap}>
       <View style={styles.copy}>
-        <Text style={styles.eyebrow}>HOMEbridge</Text>
+        <Text style={styles.eyebrow}>HomeBridge</Text>
         <Text style={styles.title}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>

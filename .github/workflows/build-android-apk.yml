@@ -12,10 +12,9 @@ concurrency:
 
 jobs:
   build-apk:
-    name: Build self-contained Android release APK
+    name: Build HomeBridge v0.6.0 release APK
     runs-on: ubuntu-latest
     timeout-minutes: 60
-
     env:
       CI: "1"
       EXPO_NO_TELEMETRY: "1"
@@ -41,11 +40,11 @@ jobs:
       - name: Install fresh dependencies
         run: |
           rm -f package-lock.json
-          npm cache clean --force
           npm install \
             --registry=https://registry.npmjs.org \
             --legacy-peer-deps \
             --package-lock=false \
+            --include=dev \
             --no-audit \
             --no-fund
 
@@ -53,56 +52,32 @@ jobs:
         run: npm run typecheck
 
       - name: Generate native Android project
-        run: |
-          npx expo prebuild \
-            --platform android \
-            --clean \
-            --non-interactive
+        run: npx expo prebuild --platform android --clean --non-interactive
 
       - name: Build bundled release APK
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew \
-            --no-daemon \
-            --stacktrace \
-            :app:assembleRelease
+          ./gradlew --no-daemon --stacktrace :app:assembleRelease
 
       - name: Verify release APK and embedded JavaScript
         run: |
           APK="android/app/build/outputs/apk/release/app-release.apk"
-
-          if [ ! -f "$APK" ]; then
-            echo "Release APK was not produced."
-            find android/app/build/outputs -type f || true
-            exit 1
-          fi
-
-          if ! unzip -l "$APK" | grep -q "assets/index.android.bundle"; then
-            echo "The JavaScript bundle is missing from the APK."
-            unzip -l "$APK" | grep -E "assets|bundle" || true
-            exit 1
-          fi
-
+          test -f "$APK"
+          unzip -l "$APK" | grep -q "assets/index.android.bundle"
           echo "Release APK and embedded JavaScript bundle verified."
 
       - name: Prepare APK artifact
         run: |
           mkdir -p release
-
-          cp \
-            android/app/build/outputs/apk/release/app-release.apk \
-            release/HomeBridge-v0.5.4.apk
-
+          cp android/app/build/outputs/apk/release/app-release.apk release/HomeBridge-v0.6.0.apk
           cd release
-          sha256sum \
-            HomeBridge-v0.5.4.apk \
-            > HomeBridge-v0.5.4.apk.sha256
+          sha256sum HomeBridge-v0.6.0.apk > HomeBridge-v0.6.0.apk.sha256
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HomeBridge-Android-v0.5.4
+          name: HomeBridge-Android-v0.6.0
           path: release/*
           if-no-files-found: error
           retention-days: 30

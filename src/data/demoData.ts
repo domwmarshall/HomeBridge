@@ -21,7 +21,7 @@ const events: CalendarEvent[] = [
     startsAt: addDays(1),
     category: 'Handover',
     responsibleParent: 'Mum',
-    location: 'Arden Grove Primary School',
+    location: 'Primary school',
     acknowledged: true,
     notes: 'Mum collects from the usual gate.',
   },
@@ -67,10 +67,10 @@ const events: CalendarEvent[] = [
 
 export const demoState: AppState = {
   child: {
-    id: 'eva-demo',
-    name: 'Eva',
+    id: 'child-demo',
+    name: 'Child',
     initials: 'E',
-    school: 'Arden Grove Primary School',
+    school: 'Primary school',
     className: 'Year 1',
     currentHousehold: "Dad's house",
     nextHandoverAt: addDays(1),
@@ -89,7 +89,6 @@ export const demoState: AppState = {
       quantity: 1,
       location: "Dad's house",
       neededAt: 'Handover bag',
-      imageEmoji: '🎒',
       notes: 'Reading record is inside.',
     },
     {
@@ -99,7 +98,6 @@ export const demoState: AppState = {
       quantity: 1,
       location: "Dad's house",
       neededAt: 'School bag',
-      imageEmoji: '👕',
     },
     {
       id: 'pink-coat',
@@ -108,7 +106,6 @@ export const demoState: AppState = {
       quantity: 1,
       location: "Dad's house",
       neededAt: 'Handover bag',
-      imageEmoji: '🧥',
     },
     {
       id: 'bunny',
@@ -117,7 +114,6 @@ export const demoState: AppState = {
       quantity: 1,
       location: "Dad's house",
       neededAt: 'Handover bag',
-      imageEmoji: '🐰',
     },
     {
       id: 'white-polos',
@@ -125,7 +121,6 @@ export const demoState: AppState = {
       category: 'Uniform',
       quantity: 3,
       location: "Dad's house",
-      imageEmoji: '👚',
       minimumAtDad: 2,
       minimumAtMum: 2,
     },
@@ -136,7 +131,6 @@ export const demoState: AppState = {
       quantity: 1,
       location: 'School bag',
       neededAt: 'Handover bag',
-      imageEmoji: '📘',
     },
     {
       id: 'travel-epipen',
@@ -145,7 +139,6 @@ export const demoState: AppState = {
       quantity: 1,
       location: "Dad's house",
       neededAt: 'Handover bag',
-      imageEmoji: '🩺',
     },
   ],
   handoverTasks: [

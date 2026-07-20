@@ -3,7 +3,7 @@
     "name": "HomeBridge",
     "slug": "homebridge-coparenting",
     "scheme": "homebridge",
-    "version": "0.5.4",
+    "version": "0.6.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -12,6 +12,15 @@
       "resizeMode": "contain",
       "backgroundColor": "#F7F6F1"
     },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "HomeBridge uses your photos so parents can identify belongings and medical items.",
+          "cameraPermission": "HomeBridge uses the camera to photograph belongings and medical items."
+        }
+      ]
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "uk.homebridge.coparenting"
@@ -24,7 +33,10 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": true
+      "predictiveBackGestureEnabled": true,
+      "softwareKeyboardLayoutMode": "resize",
+      "versionCode": 10,
+      "permissions": ["CAMERA", "READ_MEDIA_IMAGES"]
     },
     "web": {
       "favicon": "./assets/favicon.png"

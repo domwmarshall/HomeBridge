@@ -11,8 +11,8 @@ export function HouseholdSetupScreen() {
   const [mode, setMode] = useState<'create' | 'join'>('create');
   const [displayName, setDisplayName] = useState(String(user?.user_metadata?.display_name ?? ''));
   const [parentLabel, setParentLabel] = useState<'Dad' | 'Mum'>('Dad');
-  const [householdName, setHouseholdName] = useState("Eva's family");
-  const [childName, setChildName] = useState('Eva');
+  const [householdName, setHouseholdName] = useState("Our family");
+  const [childName, setChildName] = useState('Child');
   const [inviteCode, setInviteCode] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -33,9 +33,9 @@ export function HouseholdSetupScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.brand}>HOMEbridge</Text>
+        <Text style={styles.brand}>HomeBridge</Text>
         <Text style={styles.title}>Set up your shared household</Text>
         <Text style={styles.body}>One parent creates the household. The other joins with a private one-time invite code.</Text>
 

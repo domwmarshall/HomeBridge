@@ -35,11 +35,11 @@ export function AuthScreen({ onUseDemo }: { onUseDemo: () => void }) {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.logo}><Text style={styles.logoMark}>↔</Text></View>
-        <Text style={styles.brand}>HOMEbridge</Text>
-        <Text style={styles.title}>Everything Eva needs, between two homes.</Text>
+        <Text style={styles.brand}>HomeBridge</Text>
+        <Text style={styles.title}>Everything your child needs, between two homes.</Text>
         <Text style={styles.body}>Private shared planning for handovers, belongings, school dates and medical essentials.</Text>
 
         <Card style={styles.card}>

@@ -21,10 +21,10 @@ export function ConnectionScreen({ onUseDemo, onConnected }: { onUseDemo: () => 
     }
   };
 
-  return <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+  return <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.logo}><Text style={styles.logoMark}>↔</Text></View>
-      <Text style={styles.brand}>HOMEbridge</Text>
+      <Text style={styles.brand}>HomeBridge</Text>
       <Text style={styles.title}>Connect your free Supabase project</Text>
       <Text style={styles.body}>Create the project and run the included SQL in your phone browser, then paste the two client connection values here.</Text>
       <Card>

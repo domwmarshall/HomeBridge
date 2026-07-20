@@ -13,10 +13,12 @@ const categoryEmoji: Record<CalendarEvent['category'], string> = {
 
 export function TodayScreen({ navigate }: { navigate: (tab: TabKey) => void }) {
   const { state, toggleHandoverTask, viewerName } = useApp();
-  const upcoming = [...state.events].sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt)).slice(0, 3);
+  const now = Date.now();
+  const upcoming = [...state.events].filter((event) => +new Date(event.endsAt ?? event.startsAt) >= now).sort((a, b) => +new Date(a.startsAt) - +new Date(b.startsAt)).slice(0, 3);
   const done = state.handoverTasks.filter((task) => task.done).length;
   const total = state.handoverTasks.length;
   const urgent = state.medicalItems.filter((item) => item.replacementStatus !== 'OK');
+  const progress = total ? done / total : 0;
 
   return (
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -38,7 +40,7 @@ export function TodayScreen({ navigate }: { navigate: (tab: TabKey) => void }) {
       </Card>
 
       {urgent.length ? (
-        <Pressable onPress={() => navigate('eva')}>
+        <Pressable onPress={() => navigate('child')}>
           <Card style={styles.alertCard}>
             <View style={styles.alertIcon}><Text style={styles.alertEmoji}>!</Text></View>
             <View style={styles.alertCopy}>
@@ -57,12 +59,12 @@ export function TodayScreen({ navigate }: { navigate: (tab: TabKey) => void }) {
             <Text style={styles.cardTitle}>Tuesday transfer bag</Text>
             <Text style={styles.cardSubtitle}>{done} of {total} ready</Text>
           </View>
-          <View style={styles.progressBadge}><Text style={styles.progressText}>{Math.round((done / total) * 100)}%</Text></View>
+          <View style={styles.progressBadge}><Text style={styles.progressText}>{Math.round(progress * 100)}%</Text></View>
         </View>
-        <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${(done / total) * 100}%` }]} /></View>
+        <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${progress * 100}%` }]} /></View>
         <View style={styles.quickTasks}>
           {state.handoverTasks.slice(0, 3).map((task) => (
-            <Pressable key={task.id} onPress={() => toggleHandoverTask(task.id)} style={styles.taskRow}>
+            <Pressable key={task.id} onPress={() => void toggleHandoverTask(task.id)} style={styles.taskRow}>
               <View style={[styles.checkbox, task.done && styles.checkboxDone]}>{task.done ? <Text style={styles.tick}>✓</Text> : null}</View>
               <Text style={[styles.taskText, task.done && styles.taskTextDone]}>{task.label}</Text>
               {task.essential ? <Pill label="Essential" tone="rose" /> : null}

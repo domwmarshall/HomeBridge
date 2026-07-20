@@ -1,5 +1,5 @@
 import React, { PropsWithChildren } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from 'react-native';
 import { colours, radii, spacing } from '../theme';
 
 export function Card({ children, style }: PropsWithChildren<{ style?: ViewStyle | ViewStyle[] }>) {
@@ -10,7 +10,7 @@ export function SectionHeader({ title, action, onAction }: { title: string; acti
   return (
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionTitle}>{title}</Text>
-      {action ? <Pressable onPress={onAction}><Text style={styles.sectionAction}>{action}</Text></Pressable> : null}
+      {action ? <Pressable hitSlop={8} onPress={onAction}><Text style={styles.sectionAction}>{action}</Text></Pressable> : null}
     </View>
   );
 }
@@ -27,18 +27,33 @@ export function Pill({ label, tone = 'neutral' }: { label: string; tone?: 'neutr
   return <View style={[styles.pill, { backgroundColor: palette[0] }]}><Text style={[styles.pillText, { color: palette[1] }]}>{label}</Text></View>;
 }
 
-export function PrimaryButton({ label, onPress, disabled = false }: { label: string; onPress: () => void; disabled?: boolean }) {
+interface ButtonProps {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+  busy?: boolean;
+}
+
+export function PrimaryButton({ label, onPress, disabled = false, busy = false }: ButtonProps) {
   return (
-    <Pressable onPress={onPress} disabled={disabled} style={({ pressed }) => [styles.primaryButton, disabled && styles.disabled, pressed && !disabled && styles.pressed]}>
-      <Text style={styles.primaryButtonText}>{label}</Text>
+    <Pressable onPress={onPress} disabled={disabled || busy} style={({ pressed }) => [styles.primaryButton, (disabled || busy) && styles.disabled, pressed && !disabled && !busy && styles.pressed]}>
+      {busy ? <ActivityIndicator color={colours.white} /> : <Text style={styles.primaryButtonText}>{label}</Text>}
     </Pressable>
   );
 }
 
-export function SecondaryButton({ label, onPress }: { label: string; onPress: () => void }) {
+export function SecondaryButton({ label, onPress, disabled = false, busy = false }: ButtonProps) {
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}>
-      <Text style={styles.secondaryButtonText}>{label}</Text>
+    <Pressable onPress={onPress} disabled={disabled || busy} style={({ pressed }) => [styles.secondaryButton, (disabled || busy) && styles.disabled, pressed && !disabled && !busy && styles.pressed]}>
+      {busy ? <ActivityIndicator color={colours.tealDark} /> : <Text style={styles.secondaryButtonText}>{label}</Text>}
+    </Pressable>
+  );
+}
+
+export function DangerButton({ label, onPress, disabled = false, busy = false }: ButtonProps) {
+  return (
+    <Pressable onPress={onPress} disabled={disabled || busy} style={({ pressed }) => [styles.dangerButton, (disabled || busy) && styles.disabled, pressed && !disabled && !busy && styles.pressed]}>
+      {busy ? <ActivityIndicator color={colours.danger} /> : <Text style={styles.dangerButtonText}>{label}</Text>}
     </Pressable>
   );
 }
@@ -65,15 +80,17 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.xl, marginBottom: spacing.md },
-  sectionTitle: { color: colours.ink, fontSize: 19, fontWeight: '800' },
-  sectionAction: { color: colours.tealDark, fontSize: 14, fontWeight: '700' },
+  sectionTitle: { flex: 1, color: colours.ink, fontSize: 19, fontWeight: '800' },
+  sectionAction: { color: colours.tealDark, fontSize: 14, fontWeight: '800', marginLeft: spacing.md },
   pill: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 6, borderRadius: radii.pill },
   pillText: { fontSize: 12, fontWeight: '800' },
   primaryButton: { minHeight: 50, backgroundColor: colours.teal, borderRadius: radii.md, justifyContent: 'center', alignItems: 'center', paddingHorizontal: spacing.lg },
   primaryButtonText: { color: colours.white, fontSize: 16, fontWeight: '800' },
   secondaryButton: { minHeight: 48, backgroundColor: colours.tealSoft, borderRadius: radii.md, justifyContent: 'center', alignItems: 'center', paddingHorizontal: spacing.lg },
   secondaryButtonText: { color: colours.tealDark, fontSize: 15, fontWeight: '800' },
-  disabled: { opacity: 0.4 },
+  dangerButton: { minHeight: 48, backgroundColor: colours.dangerSoft, borderRadius: radii.md, justifyContent: 'center', alignItems: 'center', paddingHorizontal: spacing.lg },
+  dangerButtonText: { color: colours.danger, fontSize: 15, fontWeight: '900' },
+  disabled: { opacity: 0.42 },
   pressed: { opacity: 0.78 },
   field: { minHeight: 50, borderWidth: 1, borderColor: colours.line, borderRadius: radii.md, backgroundColor: '#FBFAF7', paddingHorizontal: spacing.lg, color: colours.ink, fontSize: 15 },
   multiline: { minHeight: 96, paddingTop: 14, textAlignVertical: 'top' },

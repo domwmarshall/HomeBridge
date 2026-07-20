@@ -1,18 +1,29 @@
 import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
+import { errorMessage } from '../lib/errors';
 import { supabase } from '../lib/supabase';
-import { HouseholdMember, Workspace } from '../types';
+import { HouseholdMember, ParentLabel, Workspace } from '../types';
 
 interface WorkspaceContextValue {
   loading: boolean;
   workspace: Workspace | null;
   error: string | null;
   refresh: () => Promise<void>;
-  createHousehold: (input: { householdName: string; displayName: string; parentLabel: 'Dad' | 'Mum'; childName: string }) => Promise<void>;
-  joinHousehold: (input: { inviteCode: string; displayName: string; parentLabel: 'Dad' | 'Mum' }) => Promise<void>;
+  createHousehold: (input: { householdName: string; displayName: string; parentLabel: ParentLabel; childName: string }) => Promise<void>;
+  joinHousehold: (input: { inviteCode: string; displayName: string; parentLabel: ParentLabel }) => Promise<void>;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
+
+function inviteCodeFrom(data: unknown): string | null {
+  if (typeof data === 'string' && data.trim()) return data.trim();
+  const value = Array.isArray(data) ? data[0] : data;
+  if (value && typeof value === 'object') {
+    const code = (value as Record<string, unknown>).invite_code;
+    if (typeof code === 'string' && code.trim()) return code.trim();
+  }
+  return null;
+}
 
 export function WorkspaceProvider({ children }: PropsWithChildren) {
   const { user } = useAuth();
@@ -51,24 +62,35 @@ export function WorkspaceProvider({ children }: PropsWithChildren) {
       if (childResult.error) throw childResult.error;
       if (membersResult.error) throw membersResult.error;
 
-      const members: HouseholdMember[] = (membersResult.data ?? []).map((row: any) => ({
+      const members: HouseholdMember[] = (membersResult.data ?? []).map((row) => ({
         userId: row.user_id,
         displayName: row.display_name,
         parentLabel: row.parent_label ?? undefined,
         role: row.role,
       }));
 
-      const client = supabase;
-      if (!client) throw new Error('Supabase is not configured.');
-      const createInvite = async (parentLabel: string) => {
-        const { data, error: inviteError } = await client.rpc('create_household_invite', {
+      const createInvite = async (parentLabel: ParentLabel): Promise<string> => {
+        if (!supabase) throw new Error('Supabase is not configured.');
+
+        const modern = await supabase.rpc('create_household_invite_v2', {
           p_household_id: membership.household_id,
           p_parent_label: parentLabel,
         });
-        if (inviteError) throw inviteError;
-        const result = Array.isArray(data) ? data[0] : data;
-        if (!result?.invite_code) throw new Error('No invite code was returned.');
-        return String(result.invite_code);
+        if (!modern.error) {
+          const code = inviteCodeFrom(modern.data);
+          if (code) return code;
+        }
+
+        const legacy = await supabase.rpc('create_household_invite', {
+          p_household_id: membership.household_id,
+          p_parent_label: parentLabel,
+        });
+        if (legacy.error) {
+          throw new Error(errorMessage(legacy.error || modern.error, 'Could not create an invite code.'));
+        }
+        const code = inviteCodeFrom(legacy.data);
+        if (!code) throw new Error('Supabase completed the invite request but returned no code. Run the HomeBridge v0.6 database patch.');
+        return code;
       };
 
       setWorkspace({
@@ -78,19 +100,20 @@ export function WorkspaceProvider({ children }: PropsWithChildren) {
         userId: user.id,
         displayName: membership.display_name,
         parentLabel: membership.parent_label ?? undefined,
+        role: membership.role,
         members,
         createInvite,
         refreshWorkspace: refresh,
       });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Could not load the shared household.');
+      setError(errorMessage(caught, 'Could not load the shared household.'));
       setWorkspace(null);
     } finally {
       setLoading(false);
     }
   }, [user]);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => { void refresh(); }, [refresh]);
 
   const value = useMemo<WorkspaceContextValue>(() => ({
     loading,
@@ -105,7 +128,7 @@ export function WorkspaceProvider({ children }: PropsWithChildren) {
         p_parent_label: parentLabel,
         p_child_name: childName.trim(),
       });
-      if (rpcError) throw rpcError;
+      if (rpcError) throw new Error(errorMessage(rpcError));
       await refresh();
     },
     joinHousehold: async ({ inviteCode, displayName, parentLabel }) => {
@@ -115,7 +138,7 @@ export function WorkspaceProvider({ children }: PropsWithChildren) {
         p_display_name: displayName.trim(),
         p_parent_label: parentLabel,
       });
-      if (rpcError) throw rpcError;
+      if (rpcError) throw new Error(errorMessage(rpcError));
       await refresh();
     },
   }), [loading, workspace, error, refresh]);
