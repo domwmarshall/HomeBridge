@@ -1,0 +1,77 @@
+name: Build HomeBridge Android APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homebridge-native-android
+  cancel-in-progress: true
+
+jobs:
+  build-apk:
+    name: Build installable Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    env:
+      CI: "1"
+      EXPO_NO_TELEMETRY: "1"
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.13.1"
+          cache: npm
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Verify public dependency URLs
+        run: |
+          if grep -q 'packages.applied-caas-gateway1.internal.api.openai.org' package-lock.json; then
+            echo 'Private package registry URLs remain.'
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci --registry=https://registry.npmjs.org --no-audit --no-fund
+
+      - name: Type-check application
+        run: npm run typecheck
+
+      - name: Generate native Android project
+        run: npx expo prebuild --platform android --clean --non-interactive
+
+      - name: Build native Android APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon --stacktrace assembleDebug
+
+      - name: Prepare installable APK
+        run: |
+          mkdir -p release
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/HomeBridge-v0.5.1.apk
+          cd release
+          sha256sum HomeBridge-v0.5.1.apk > HomeBridge-v0.5.1.apk.sha256
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: HomeBridge-Android-v0.5.1
+          path: release/*
+          if-no-files-found: error
+          retention-days: 30
