@@ -2,7 +2,8 @@
   "expo": {
     "name": "HomeBridge",
     "slug": "homebridge-coparenting",
-    "version": "0.5.3",
+    "scheme": "homebridge",
+    "version": "0.5.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
