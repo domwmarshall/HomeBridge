@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   build-apk:
-    name: Build HomeBridge v0.9.0 release APK
+    name: Build HomeBridge v0.9.1 release APK
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
@@ -84,14 +84,14 @@ jobs:
       - name: Prepare APK artifact
         run: |
           mkdir -p release
-          cp android/app/build/outputs/apk/release/app-release.apk release/HomeBridge-v0.9.0.apk
+          cp android/app/build/outputs/apk/release/app-release.apk release/HomeBridge-v0.9.1.apk
           cd release
-          sha256sum HomeBridge-v0.9.0.apk > HomeBridge-v0.9.0.apk.sha256
+          sha256sum HomeBridge-v0.9.1.apk > HomeBridge-v0.9.1.apk.sha256
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HomeBridge-Android-v0.9.0
+          name: HomeBridge-Android-v0.9.1
           path: release/*
           if-no-files-found: error
           retention-days: 30

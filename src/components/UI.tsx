@@ -2,6 +2,7 @@ import React, { PropsWithChildren } from "react";
 import {
   ActivityIndicator,
   Pressable,
+  StyleProp,
   StyleSheet,
   Text,
   TextInput,
@@ -14,7 +15,7 @@ import { colours, radii, spacing } from "../theme";
 export function Card({
   children,
   style,
-}: PropsWithChildren<{ style?: ViewStyle | ViewStyle[] }>) {
+}: PropsWithChildren<{ style?: StyleProp<ViewStyle> }>) {
   return <View style={[styles.card, style]}>{children}</View>;
 }
 

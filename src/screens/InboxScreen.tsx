@@ -183,7 +183,13 @@ export function InboxScreen({ navigate }: { navigate: (tab: TabKey) => void }) {
             key={item.id}
             onPress={() => void openNotification(item.id, item.targetTab)}
           >
-            <Card style={[styles.notificationCard, !item.readAt && styles.unreadCard]}>
+            <Card
+              style={
+                !item.readAt
+                  ? [styles.notificationCard, styles.unreadCard]
+                  : styles.notificationCard
+              }
+            >
               <View style={styles.notificationTop}>
                 <View style={[styles.kindIcon, item.requiresAction && styles.kindIconAction]}>
                   <Text style={styles.kindIconText}>{item.requiresAction ? "!" : "•"}</Text>
