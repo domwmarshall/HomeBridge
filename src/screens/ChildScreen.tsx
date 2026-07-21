@@ -34,7 +34,9 @@ export function ChildScreen() {
     resetDemo,
     mode,
     members,
+    pendingInvites,
     createInvite,
+    revokeInvite,
     removeMember,
     workspaceRole,
     syncError,
@@ -171,7 +173,7 @@ export function ChildScreen() {
       setInviteCode(code);
       setSheet('invite');
     } catch (caught) {
-      Alert.alert('Could not create invite', errorMessage(caught, 'Run the HomeBridge v0.6 database patch and try again.'));
+      Alert.alert('Could not create invite', errorMessage(caught, 'Run the HomeBridge v0.7 database patch and try again.'));
     } finally {
       setBusy(false);
     }
@@ -180,6 +182,26 @@ export function ChildScreen() {
   const shareInvite = async () => {
     if (!inviteCode) return;
     await Share.share({ message: `Join our HomeBridge household with this one-time code: ${inviteCode}\n\nThe code expires in 7 days and can be used once.` });
+  };
+
+
+  const revokePendingInvite = (inviteId: string, parentLabel?: string) => {
+    Alert.alert(
+      'Revoke invitation?',
+      `${parentLabel ? `${parentLabel}'s` : 'This'} one-time code will stop working immediately.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Revoke',
+          style: 'destructive',
+          onPress: () => {
+            revokeInvite(inviteId).catch((caught) =>
+              Alert.alert('Could not revoke invite', errorMessage(caught)),
+            );
+          },
+        },
+      ],
+    );
   };
 
   const removeHouseholdMember = (userId: string, displayName: string) => {
@@ -249,8 +271,26 @@ export function ChildScreen() {
               </View>
             </React.Fragment>
           ))}
+          {mode === 'live' && pendingInvites.length ? (
+            <View style={styles.pendingInvites}>
+              <Text style={styles.pendingTitle}>Pending invitation</Text>
+              {pendingInvites.map((invite) => (
+                <View key={invite.id} style={styles.pendingRow}>
+                  <View style={styles.pendingCopy}>
+                    <Text style={styles.pendingName}>{invite.parentLabel ?? 'Parent'} invite</Text>
+                    <Text style={styles.pendingMeta}>Expires {formatDay(invite.expiresAt)}</Text>
+                  </View>
+                  {workspaceRole === 'owner' ? (
+                    <Pressable onPress={() => revokePendingInvite(invite.id, invite.parentLabel)}>
+                      <Text style={styles.removeMember}>Revoke</Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+              ))}
+            </View>
+          ) : null}
           {mode === 'live' && members.length < 2 ? <View style={styles.inviteWrap}>
-            <PrimaryButton label={busy ? 'Creating invite…' : `Invite ${otherParent}`} onPress={() => void makeInvite()} disabled={busy} />
+            <PrimaryButton label={busy ? 'Creating invite…' : pendingInvites.length ? `Create another ${otherParent} code` : `Invite ${otherParent}`} onPress={() => void makeInvite()} disabled={busy} />
           </View> : null}
           {mode === 'live' && members.length >= 2 ? <Text style={styles.connectedNote}>Both parents are connected to this household.</Text> : null}
         </Card>
@@ -362,6 +402,12 @@ const styles = StyleSheet.create({
   parentStatus: { maxWidth: 125, color: colours.tealDark, fontSize: 11, textAlign: 'right', fontWeight: '700' },
   removeMember: { color: colours.rose, fontSize: 11, fontWeight: '900', marginTop: 7 },
   divider: { height: 1, backgroundColor: colours.line, marginVertical: spacing.lg },
+  pendingInvites: { marginTop: spacing.lg, paddingTop: spacing.lg, borderTopWidth: 1, borderTopColor: colours.line },
+  pendingTitle: { color: colours.ink, fontWeight: '900', fontSize: 13, marginBottom: spacing.sm },
+  pendingRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm },
+  pendingCopy: { flex: 1 },
+  pendingName: { color: colours.ink, fontWeight: '800', fontSize: 13 },
+  pendingMeta: { color: colours.muted, fontSize: 11, marginTop: 2 },
   inviteWrap: { marginTop: spacing.lg, paddingTop: spacing.lg, borderTopWidth: 1, borderTopColor: colours.line },
   connectedNote: { color: colours.green, fontSize: 12, fontWeight: '800', textAlign: 'center', marginTop: spacing.lg, paddingTop: spacing.lg, borderTopWidth: 1, borderTopColor: colours.line },
   settingRow: { flexDirection: 'row', paddingVertical: spacing.md },

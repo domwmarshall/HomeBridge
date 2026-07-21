@@ -1,4 +1,5 @@
 import { AppState, CalendarEvent } from '../types';
+import { dateKey } from '../utils/calendar';
 
 const addDays = (days: number, hour = 15, minute = 15) => {
   const date = new Date();
@@ -24,15 +25,20 @@ const events: CalendarEvent[] = [
     location: 'Primary school',
     acknowledged: true,
     notes: 'Mum collects from the usual gate.',
+    allDay: false,
+    requiredItemIds: ['school-bag', 'travel-epipen'],
   },
   {
     id: 'summer-break',
     title: 'Norfolk summer holiday begins',
     startsAt: dateOnly(4),
+    endsAt: dateOnly(45),
     category: 'Holiday',
     responsibleParent: 'Both',
     acknowledged: true,
     notes: 'Model calendar date — school dates remain editable.',
+    allDay: true,
+    requiredItemIds: [],
   },
   {
     id: 'party-amelia',
@@ -43,17 +49,23 @@ const events: CalendarEvent[] = [
     responsibleParent: 'Dad',
     location: 'Jump Warehouse, Norwich',
     acknowledged: false,
-    notes: 'RSVP due in two days. Present still needed.',
+    notes: 'Present still needed.',
+    allDay: false,
+    rsvpDeadline: addDays(2, 12, 0),
+    requiredItemIds: ['pink-coat', 'travel-epipen'],
   },
   {
     id: 'trip-beach',
     title: 'Day trip to the beach',
     startsAt: addDays(10, 9, 30),
+    endsAt: addDays(10, 17, 0),
     category: 'Trip',
     responsibleParent: 'Mum',
     location: 'Winterton-on-Sea',
     acknowledged: true,
     notes: 'Pack sun cream, hat, water bottle and travel EpiPen.',
+    allDay: false,
+    requiredItemIds: ['travel-epipen', 'pink-coat'],
   },
   {
     id: 'epipen-check',
@@ -62,8 +74,15 @@ const events: CalendarEvent[] = [
     category: 'Medical',
     responsibleParent: 'Both',
     acknowledged: false,
+    allDay: false,
+    requiredItemIds: ['travel-epipen'],
   },
 ];
+
+const nextTuesday = new Date();
+nextTuesday.setHours(12, 0, 0, 0);
+const daysToTuesday = (2 - (nextTuesday.getDay() || 7) + 7) % 7;
+nextTuesday.setDate(nextTuesday.getDate() + daysToTuesday);
 
 export const demoState: AppState = {
   child: {
@@ -178,5 +197,17 @@ export const demoState: AppState = {
       replacementStatus: 'OK',
     },
   ],
+  careScheduleRules: [
+    {
+      id: 'rule-demo',
+      title: 'Alternating Tuesday handover',
+      startsOn: dateKey(nextTuesday),
+      householdLabel: "Mum's house",
+      pickupParentLabel: 'Mum',
+      pickupLocation: 'school or agreed handover point',
+      recurrenceRule: 'FREQ=WEEKLY;INTERVAL=2;BYDAY=TU',
+    },
+  ],
+  careOverrides: [],
   handoverNote: '',
 };

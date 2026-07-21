@@ -47,6 +47,7 @@ export function BottomSheet({ visible, title, onClose, children }: BottomSheetPr
             </Pressable>
           </View>
           <ScrollView
+            automaticallyAdjustKeyboardInsets
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="interactive"
             showsVerticalScrollIndicator={false}
@@ -66,7 +67,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   backdrop: {
-    position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     backgroundColor: 'rgba(20,31,37,0.44)',
   },
   sheet: {

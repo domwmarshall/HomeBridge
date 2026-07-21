@@ -13,6 +13,8 @@ export type HouseholdLocation =
   | 'Missing'
   | 'Outgrown';
 
+export type HomeLocation = "Dad's house" | "Mum's house";
+
 export type ItemCategory =
   | 'Uniform'
   | 'Clothing'
@@ -27,7 +29,8 @@ export type EventCategory =
   | 'Party'
   | 'Trip'
   | 'Medical'
-  | 'Holiday';
+  | 'Holiday'
+  | 'Reminder';
 
 export type SyncState = 'local' | 'connecting' | 'synced' | 'offline' | 'error';
 
@@ -37,6 +40,13 @@ export interface PickedPhoto {
   mimeType?: string | null;
   width?: number;
   height?: number;
+}
+
+export interface PendingInvite {
+  id: string;
+  parentLabel?: ParentLabel;
+  expiresAt: string;
+  createdAt: string;
 }
 
 export interface HouseholdMember {
@@ -55,7 +65,9 @@ export interface Workspace {
   parentLabel?: ParentLabel;
   role: HouseholdMember['role'];
   members: HouseholdMember[];
+  pendingInvites: PendingInvite[];
   createInvite: (parentLabel: ParentLabel) => Promise<string>;
+  revokeInvite: (inviteId: string) => Promise<void>;
   refreshWorkspace: () => Promise<void>;
 }
 
@@ -65,13 +77,45 @@ export interface ChildProfile {
   initials: string;
   school: string;
   className: string;
-  currentHousehold: "Dad's house" | "Mum's house";
+  currentHousehold: HomeLocation;
   nextHandoverAt: string;
   nextHandoverTo: ParentLabel;
   collectionPlan: string;
   allergies: string[];
   clothingSize: string;
   shoeSize: string;
+}
+
+export interface CareScheduleRule {
+  id: string;
+  title: string;
+  startsOn: string;
+  householdLabel: HomeLocation;
+  pickupParentLabel?: ParentLabel;
+  pickupLocation?: string;
+  recurrenceRule: string;
+}
+
+export interface CareOverride {
+  id: string;
+  startsOn: string;
+  endsOn: string;
+  householdLabel: HomeLocation;
+  note?: string;
+}
+
+export interface CareOverrideInput {
+  startsOn: string;
+  endsOn: string;
+  householdLabel: HomeLocation;
+  note?: string;
+}
+
+export interface CareScheduleInput {
+  startsOn: string;
+  householdLabel: HomeLocation;
+  pickupParentLabel: ParentLabel;
+  pickupLocation: string;
 }
 
 export interface CalendarEvent {
@@ -84,6 +128,11 @@ export interface CalendarEvent {
   location?: string;
   acknowledged: boolean;
   notes?: string;
+  allDay: boolean;
+  rsvpDeadline?: string;
+  requiredItemIds: string[];
+  photoPath?: string;
+  photoUrl?: string;
 }
 
 export interface TrackedItem {
@@ -127,12 +176,19 @@ export interface AppState {
   items: TrackedItem[];
   handoverTasks: HandoverTask[];
   medicalItems: MedicalItem[];
+  careScheduleRules: CareScheduleRule[];
+  careOverrides: CareOverride[];
   handoverNote: string;
   activeHandoverId?: string;
 }
 
-export type NewCalendarEvent = Omit<CalendarEvent, 'id' | 'acknowledged'>;
-export type EditableCalendarEvent = Omit<CalendarEvent, 'acknowledged'>;
+export type NewCalendarEvent = Omit<CalendarEvent, 'id' | 'acknowledged' | 'photoPath' | 'photoUrl'> & {
+  photo?: PickedPhoto;
+};
+
+export type EditableCalendarEvent = Omit<CalendarEvent, 'acknowledged' | 'photoUrl'> & {
+  photo?: PickedPhoto;
+};
 
 export interface ItemInput {
   name: string;
