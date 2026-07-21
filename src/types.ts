@@ -1,38 +1,30 @@
-export type TabKey = 'today' | 'calendar' | 'things' | 'handover' | 'child';
+export type TabKey = "today" | "calendar" | "things" | "handover" | "child";
 
-export type ParentLabel = 'Dad' | 'Mum';
-export type ResponsibleParent = ParentLabel | 'Both';
+export type ParentLabel = "Dad" | "Mum";
+export type ResponsibleParent = ParentLabel | "Both";
 
 export type HouseholdLocation =
   | "Dad's house"
   | "Mum's house"
-  | 'School'
-  | 'School bag'
-  | 'Handover bag'
-  | 'In transit'
-  | 'Missing'
-  | 'Outgrown';
+  | "School"
+  | "School bag"
+  | "Handover bag"
+  | "In transit"
+  | "Missing"
+  | "Outgrown";
 
 export type HomeLocation = "Dad's house" | "Mum's house";
 
 export type ItemCategory =
-  | 'Uniform'
-  | 'Clothing'
-  | 'Toy'
-  | 'School'
-  | 'Medical'
-  | 'Other';
+  "Uniform" | "Clothing" | "Toy" | "School" | "Medical" | "Other";
 
 export type EventCategory =
-  | 'School'
-  | 'Handover'
-  | 'Party'
-  | 'Trip'
-  | 'Medical'
-  | 'Holiday'
-  | 'Reminder';
+  "School" | "Handover" | "Party" | "Trip" | "Medical" | "Holiday" | "Reminder";
 
-export type SyncState = 'local' | 'connecting' | 'synced' | 'offline' | 'error';
+export type SyncState = "local" | "connecting" | "synced" | "offline" | "error";
+export type CareChangeStatus =
+  "pending" | "accepted" | "rejected" | "cancelled";
+export type NotificationPermission = "undetermined" | "granted" | "denied";
 
 export interface PickedPhoto {
   uri: string;
@@ -53,7 +45,7 @@ export interface HouseholdMember {
   userId: string;
   displayName: string;
   parentLabel?: string;
-  role: 'owner' | 'parent' | 'guardian' | 'viewer';
+  role: "owner" | "parent" | "guardian" | "viewer";
 }
 
 export interface Workspace {
@@ -63,7 +55,7 @@ export interface Workspace {
   userId: string;
   displayName: string;
   parentLabel?: ParentLabel;
-  role: HouseholdMember['role'];
+  role: HouseholdMember["role"];
   members: HouseholdMember[];
   pendingInvites: PendingInvite[];
   createInvite: (parentLabel: ParentLabel) => Promise<string>;
@@ -109,6 +101,16 @@ export interface CareOverrideInput {
   endsOn: string;
   householdLabel: HomeLocation;
   note?: string;
+}
+
+export interface CareChangeRequest extends CareOverrideInput {
+  id: string;
+  status: CareChangeStatus;
+  requestedBy: string;
+  requestedByName: string;
+  requestedAt: string;
+  respondedBy?: string;
+  respondedAt?: string;
 }
 
 export interface CareScheduleInput {
@@ -164,10 +166,18 @@ export interface MedicalItem {
   expiryDate: string;
   quantity: number;
   lastCheckedAt: string;
-  replacementStatus: 'OK' | 'Due soon' | 'Requested' | 'Replaced';
+  replacementStatus: "OK" | "Due soon" | "Requested" | "Replaced";
   photoPath?: string;
   photoUrl?: string;
   notes?: string;
+}
+
+export interface NotificationSettings {
+  enabled: boolean;
+  handovers: boolean;
+  events: boolean;
+  rsvp: boolean;
+  medical: boolean;
 }
 
 export interface AppState {
@@ -178,15 +188,22 @@ export interface AppState {
   medicalItems: MedicalItem[];
   careScheduleRules: CareScheduleRule[];
   careOverrides: CareOverride[];
+  careChangeRequests: CareChangeRequest[];
   handoverNote: string;
   activeHandoverId?: string;
 }
 
-export type NewCalendarEvent = Omit<CalendarEvent, 'id' | 'acknowledged' | 'photoPath' | 'photoUrl'> & {
+export type NewCalendarEvent = Omit<
+  CalendarEvent,
+  "id" | "acknowledged" | "photoPath" | "photoUrl"
+> & {
   photo?: PickedPhoto;
 };
 
-export type EditableCalendarEvent = Omit<CalendarEvent, 'acknowledged' | 'photoUrl'> & {
+export type EditableCalendarEvent = Omit<
+  CalendarEvent,
+  "acknowledged" | "photoUrl"
+> & {
   photo?: PickedPhoto;
 };
 
@@ -207,7 +224,7 @@ export interface MedicalItemInput {
   location: HouseholdLocation;
   expiryDate: string;
   quantity: number;
-  replacementStatus: MedicalItem['replacementStatus'];
+  replacementStatus: MedicalItem["replacementStatus"];
   notes?: string;
   photo?: PickedPhoto;
 }

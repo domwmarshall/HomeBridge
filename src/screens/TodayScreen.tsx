@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Alert,
   Pressable,
@@ -7,27 +7,30 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
-import { AppHeader } from '../components/AppHeader';
-import { Card, Pill, PrimaryButton, SectionHeader } from '../components/UI';
-import { errorMessage } from '../lib/errors';
-import { useApp } from '../store/AppContext';
-import { colours, radii, spacing } from '../theme';
-import { CalendarEvent, TabKey } from '../types';
+} from "react-native";
+import { AppHeader } from "../components/AppHeader";
+import { Card, Pill, PrimaryButton, SectionHeader } from "../components/UI";
+import { errorMessage } from "../lib/errors";
+import { useApp } from "../store/AppContext";
+import { colours, radii, spacing } from "../theme";
+import { CalendarEvent, TabKey } from "../types";
 import {
   householdForDate,
+  isHandoverDate,
+  nextHandoverDate,
   nextPlanningIssue,
-} from '../utils/calendar';
-import { formatDay, formatLongDate, formatTime } from '../utils/format';
+  parentForHome,
+} from "../utils/calendar";
+import { formatDay, formatLongDate, formatTime } from "../utils/format";
 
-const categoryEmoji: Record<CalendarEvent['category'], string> = {
-  School: '🏫',
-  Handover: '🔁',
-  Party: '🎈',
-  Trip: '🗺️',
-  Medical: '🩺',
-  Holiday: '☀️',
-  Reminder: '🔔',
+const categoryEmoji: Record<CalendarEvent["category"], string> = {
+  School: "🏫",
+  Handover: "🔁",
+  Party: "🎈",
+  Trip: "🗺️",
+  Medical: "🩺",
+  Holiday: "☀️",
+  Reminder: "🔔",
 };
 
 export function TodayScreen({ navigate }: { navigate: (tab: TabKey) => void }) {
@@ -47,7 +50,7 @@ export function TodayScreen({ navigate }: { navigate: (tab: TabKey) => void }) {
   const done = state.handoverTasks.filter((task) => task.done).length;
   const total = state.handoverTasks.length;
   const urgent = state.medicalItems.filter(
-    (item) => item.replacementStatus !== 'OK',
+    (item) => item.replacementStatus !== "OK",
   );
   const progress = total ? done / total : 0;
   const currentHome = householdForDate(
@@ -56,6 +59,26 @@ export function TodayScreen({ navigate }: { navigate: (tab: TabKey) => void }) {
     state.careOverrides,
     state.child.currentHousehold,
   );
+  const nowDate = new Date();
+  const handoverStillToday =
+    isHandoverDate(nowDate, state.careScheduleRules) &&
+    nowDate.getHours() * 60 + nowDate.getMinutes() < 15 * 60 + 15;
+  const nextHandover =
+    nextHandoverDate(nowDate, state.careScheduleRules, handoverStillToday) ??
+    new Date(state.child.nextHandoverAt);
+  nextHandover.setHours(15, 15, 0, 0);
+  const rule = state.careScheduleRules[0];
+  const handoverDestination = householdForDate(
+    nextHandover,
+    state.careScheduleRules,
+    state.careOverrides,
+    state.child.currentHousehold,
+  );
+  const collectionParent =
+    rule?.pickupParentLabel ?? parentForHome(handoverDestination);
+  const collectionPlan = `${collectionParent} collects from ${
+    rule?.pickupLocation ?? "the agreed handover point"
+  }`;
   const planningIssue = nextPlanningIssue(
     state.events,
     state.items,
@@ -71,13 +94,13 @@ export function TodayScreen({ navigate }: { navigate: (tab: TabKey) => void }) {
         planningIssue.items.map((item) => item.id),
       );
       Alert.alert(
-        count ? 'Added to handover' : 'Already on the checklist',
+        count ? "Added to handover" : "Already on the checklist",
         count
-          ? `${count} item${count === 1 ? '' : 's'} added to the next handover.`
-          : 'The required items are already on the next handover checklist.',
+          ? `${count} item${count === 1 ? "" : "s"} added to the next handover.`
+          : "The required items are already on the next handover checklist.",
       );
     } catch (caught) {
-      Alert.alert('Could not update handover', errorMessage(caught));
+      Alert.alert("Could not update handover", errorMessage(caught));
     }
   };
 
@@ -87,7 +110,7 @@ export function TodayScreen({ navigate }: { navigate: (tab: TabKey) => void }) {
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
-          refreshing={syncState === 'connecting'}
+          refreshing={syncState === "connecting"}
           onRefresh={() => void refresh()}
           tintColor={colours.tealDark}
         />
@@ -104,30 +127,34 @@ export function TodayScreen({ navigate }: { navigate: (tab: TabKey) => void }) {
             <Text style={styles.avatarText}>{state.child.initials}</Text>
           </View>
           <View style={styles.heroCopy}>
-            <Text style={styles.heroLabel}>{state.child.name} is currently with</Text>
+            <Text style={styles.heroLabel}>
+              {state.child.name} is currently with
+            </Text>
             <Text style={styles.heroTitle}>
-              {currentHome === "Dad's house" ? 'Dad' : 'Mum'}
+              {currentHome === "Dad's house" ? "Dad" : "Mum"}
             </Text>
           </View>
           <Pill label="Today" tone="teal" />
         </View>
         <View style={styles.rule} />
         <Text style={styles.nextLabel}>NEXT COLLECTION</Text>
-        <Text style={styles.collection}>{state.child.collectionPlan}</Text>
+        <Text style={styles.collection}>{collectionPlan}</Text>
         <Text style={styles.when}>
-          {formatDay(state.child.nextHandoverAt)} ·{' '}
-          {formatTime(state.child.nextHandoverAt)}
+          {formatDay(nextHandover.toISOString())} ·{" "}
+          {formatTime(nextHandover.toISOString())}
         </Text>
       </Card>
 
       {urgent.length ? (
-        <Pressable onPress={() => navigate('child')}>
+        <Pressable onPress={() => navigate("child")}>
           <Card style={styles.alertCard}>
             <View style={styles.alertIcon}>
               <Text style={styles.alertEmoji}>!</Text>
             </View>
             <View style={styles.alertCopy}>
-              <Text style={styles.alertTitle}>Medical item needs attention</Text>
+              <Text style={styles.alertTitle}>
+                Medical item needs attention
+              </Text>
               <Text style={styles.alertBody}>
                 {urgent[0].name} is marked “{urgent[0].replacementStatus}”.
               </Text>
@@ -144,8 +171,8 @@ export function TodayScreen({ navigate }: { navigate: (tab: TabKey) => void }) {
             <View style={styles.planningCopy}>
               <Text style={styles.planningTitle}>Plan the next handover</Text>
               <Text style={styles.planningBody}>
-                {planningIssue.event.title} needs{' '}
-                {planningIssue.items.map((item) => item.name).join(', ')}.
+                {planningIssue.event.title} needs{" "}
+                {planningIssue.items.map((item) => item.name).join(", ")}.
               </Text>
             </View>
           </View>
@@ -159,7 +186,7 @@ export function TodayScreen({ navigate }: { navigate: (tab: TabKey) => void }) {
       <SectionHeader
         title="Next handover"
         action="Open checklist"
-        onAction={() => navigate('handover')}
+        onAction={() => navigate("handover")}
       />
       <Card>
         <View style={styles.progressHeader}>
@@ -170,11 +197,15 @@ export function TodayScreen({ navigate }: { navigate: (tab: TabKey) => void }) {
             </Text>
           </View>
           <View style={styles.progressBadge}>
-            <Text style={styles.progressText}>{Math.round(progress * 100)}%</Text>
+            <Text style={styles.progressText}>
+              {Math.round(progress * 100)}%
+            </Text>
           </View>
         </View>
         <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+          <View
+            style={[styles.progressFill, { width: `${progress * 100}%` }]}
+          />
         </View>
         <View style={styles.quickTasks}>
           {state.handoverTasks.slice(0, 3).map((task) => (
@@ -195,20 +226,22 @@ export function TodayScreen({ navigate }: { navigate: (tab: TabKey) => void }) {
         </View>
         <PrimaryButton
           label="View full handover"
-          onPress={() => navigate('handover')}
+          onPress={() => navigate("handover")}
         />
       </Card>
 
       <SectionHeader
         title="Coming up"
         action="View calendar"
-        onAction={() => navigate('calendar')}
+        onAction={() => navigate("calendar")}
       />
       {upcoming.map((event) => (
-        <Pressable key={event.id} onPress={() => navigate('calendar')}>
+        <Pressable key={event.id} onPress={() => navigate("calendar")}>
           <Card style={styles.eventCard}>
             <View style={styles.eventEmoji}>
-              <Text style={styles.eventEmojiText}>{categoryEmoji[event.category]}</Text>
+              <Text style={styles.eventEmojiText}>
+                {categoryEmoji[event.category]}
+              </Text>
             </View>
             <View style={styles.eventCopy}>
               <Text style={styles.eventTitle}>{event.title}</Text>
@@ -237,68 +270,68 @@ const styles = StyleSheet.create({
     backgroundColor: colours.background,
   },
   hero: { backgroundColor: colours.tealDark, borderColor: colours.tealDark },
-  heroTop: { flexDirection: 'row', alignItems: 'center' },
+  heroTop: { flexDirection: "row", alignItems: "center" },
   avatar: {
     width: 54,
     height: 54,
     borderRadius: 27,
     backgroundColor: colours.white,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
-  avatarText: { color: colours.tealDark, fontWeight: '900', fontSize: 24 },
+  avatarText: { color: colours.tealDark, fontWeight: "900", fontSize: 24 },
   heroCopy: { flex: 1, marginLeft: spacing.md },
-  heroLabel: { color: '#BFE1DB', fontSize: 13, fontWeight: '600' },
+  heroLabel: { color: "#BFE1DB", fontSize: 13, fontWeight: "600" },
   heroTitle: {
     color: colours.white,
     fontSize: 25,
-    fontWeight: '900',
+    fontWeight: "900",
     marginTop: 2,
   },
-  rule: { height: 1, backgroundColor: '#397873', marginVertical: spacing.lg },
+  rule: { height: 1, backgroundColor: "#397873", marginVertical: spacing.lg },
   nextLabel: {
-    color: '#BFE1DB',
+    color: "#BFE1DB",
     fontSize: 10,
     letterSpacing: 1.3,
-    fontWeight: '900',
+    fontWeight: "900",
   },
   collection: {
     color: colours.white,
     fontSize: 17,
     lineHeight: 23,
-    fontWeight: '800',
+    fontWeight: "800",
     marginTop: 6,
   },
-  when: { color: '#DCEDEA', fontSize: 13, marginTop: 5 },
+  when: { color: "#DCEDEA", fontSize: 13, marginTop: 5 },
   alertCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: spacing.md,
     backgroundColor: colours.roseSoft,
-    borderColor: '#EBCFD3',
+    borderColor: "#EBCFD3",
   },
   alertIcon: {
     width: 38,
     height: 38,
     borderRadius: 19,
     backgroundColor: colours.rose,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
-  alertEmoji: { color: colours.white, fontWeight: '900', fontSize: 20 },
+  alertEmoji: { color: colours.white, fontWeight: "900", fontSize: 20 },
   alertCopy: { flex: 1, marginHorizontal: spacing.md },
-  alertTitle: { color: colours.ink, fontWeight: '800', fontSize: 15 },
+  alertTitle: { color: colours.ink, fontWeight: "800", fontSize: 15 },
   alertBody: { color: colours.muted, fontSize: 13, marginTop: 2 },
   chevron: { color: colours.rose, fontSize: 28 },
   planningCard: {
     marginTop: spacing.md,
     backgroundColor: colours.amberSoft,
-    borderColor: '#F0D5AE',
+    borderColor: "#F0D5AE",
   },
-  planningHeader: { flexDirection: 'row', marginBottom: spacing.lg },
+  planningHeader: { flexDirection: "row", marginBottom: spacing.lg },
   planningEmoji: { fontSize: 28 },
   planningCopy: { flex: 1, marginLeft: spacing.md },
-  planningTitle: { color: colours.ink, fontSize: 15, fontWeight: '900' },
+  planningTitle: { color: colours.ink, fontSize: 15, fontWeight: "900" },
   planningBody: {
     color: colours.muted,
     fontSize: 12,
@@ -306,34 +339,34 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
-  cardTitle: { color: colours.ink, fontWeight: '900', fontSize: 18 },
+  cardTitle: { color: colours.ink, fontWeight: "900", fontSize: 18 },
   cardSubtitle: { color: colours.muted, fontSize: 13, marginTop: 3 },
   progressBadge: {
     width: 48,
     height: 48,
     borderRadius: 24,
     backgroundColor: colours.tealSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
-  progressText: { color: colours.tealDark, fontWeight: '900', fontSize: 13 },
+  progressText: { color: colours.tealDark, fontWeight: "900", fontSize: 13 },
   progressTrack: {
     height: 8,
     borderRadius: 4,
     backgroundColor: colours.line,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginVertical: spacing.lg,
   },
   progressFill: { height: 8, borderRadius: 4, backgroundColor: colours.teal },
   quickTasks: { marginBottom: spacing.lg },
   taskRow: {
     minHeight: 46,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.md,
   },
   checkbox: {
@@ -341,17 +374,17 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#C8CFD1',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: "#C8CFD1",
+    alignItems: "center",
+    justifyContent: "center",
   },
   checkboxDone: { backgroundColor: colours.teal, borderColor: colours.teal },
-  tick: { color: colours.white, fontWeight: '900' },
-  taskText: { flex: 1, color: colours.ink, fontSize: 14, fontWeight: '600' },
-  taskTextDone: { color: colours.muted, textDecorationLine: 'line-through' },
+  tick: { color: colours.white, fontWeight: "900" },
+  taskText: { flex: 1, color: colours.ink, fontSize: 14, fontWeight: "600" },
+  taskTextDone: { color: colours.muted, textDecorationLine: "line-through" },
   eventCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: spacing.md,
     paddingVertical: spacing.md,
   },
@@ -360,19 +393,24 @@ const styles = StyleSheet.create({
     height: 46,
     borderRadius: radii.md,
     backgroundColor: colours.blueSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   eventEmojiText: { fontSize: 22 },
   eventCopy: { flex: 1, marginLeft: spacing.md },
-  eventTitle: { color: colours.ink, fontSize: 15, fontWeight: '800' },
+  eventTitle: { color: colours.ink, fontSize: 15, fontWeight: "800" },
   eventMeta: {
     color: colours.tealDark,
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: "700",
     marginTop: 3,
   },
   eventLocation: { color: colours.muted, fontSize: 12, marginTop: 2 },
-  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colours.amber },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colours.amber,
+  },
   bottomSpace: { height: 20 },
 });

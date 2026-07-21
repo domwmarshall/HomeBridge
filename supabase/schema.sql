@@ -295,7 +295,7 @@ begin
   returning id into v_medication_bag;
 
   insert into public.care_schedule_rules (household_id, child_id, title, recurrence_rule, household_label, pickup_parent_label, pickup_location, starts_on)
-  values (v_household, v_child, 'Alternating Tuesday handover', 'FREQ=WEEKLY;INTERVAL=2;BYDAY=TU', v_other_house, v_other_parent, 'school or agreed handover point', v_first_handover::date);
+  values (v_household, v_child, 'Alternating Tuesday handover', 'FREQ=WEEKLY;INTERVAL=1;BYDAY=TU', v_other_house, v_other_parent, 'school or agreed handover point', v_first_handover::date);
 
   insert into public.handovers (household_id, child_id, starts_at, from_household_label, to_household_label, pickup_parent_label, pickup_location)
   values (v_household, v_child, v_first_handover, v_current_house, v_other_house, v_other_parent, 'school or agreed handover point')

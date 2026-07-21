@@ -1,4 +1,4 @@
-import React, { PropsWithChildren } from 'react';
+import React, { PropsWithChildren } from "react";
 import {
   KeyboardAvoidingView,
   Modal,
@@ -8,8 +8,8 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
-import { colours, radii, spacing } from '../theme';
+} from "react-native";
+import { colours, radii, spacing } from "../theme";
 
 interface BottomSheetProps extends PropsWithChildren {
   visible: boolean;
@@ -17,7 +17,12 @@ interface BottomSheetProps extends PropsWithChildren {
   onClose: () => void;
 }
 
-export function BottomSheet({ visible, title, onClose, children }: BottomSheetProps) {
+export function BottomSheet({
+  visible,
+  title,
+  onClose,
+  children,
+}: BottomSheetProps) {
   return (
     <Modal
       visible={visible}
@@ -28,7 +33,7 @@ export function BottomSheet({ visible, title, onClose, children }: BottomSheetPr
     >
       <KeyboardAvoidingView
         style={styles.overlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={0}
       >
         <Pressable style={styles.backdrop} onPress={onClose} />
@@ -64,39 +69,39 @@ export function BottomSheet({ visible, title, onClose, children }: BottomSheetPr
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   backdrop: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     right: 0,
     bottom: 0,
     left: 0,
-    backgroundColor: 'rgba(20,31,37,0.44)',
+    backgroundColor: "rgba(20,31,37,0.44)",
   },
   sheet: {
-    maxHeight: '92%',
+    maxHeight: "92%",
     minHeight: 180,
     backgroundColor: colours.surface,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingTop: spacing.md,
     paddingHorizontal: spacing.xl,
-    paddingBottom: Platform.OS === 'android' ? 22 : 34,
+    paddingBottom: Platform.OS === "android" ? 22 : 34,
   },
   handle: {
     width: 42,
     height: 5,
     borderRadius: 3,
     backgroundColor: colours.line,
-    alignSelf: 'center',
+    alignSelf: "center",
     marginBottom: spacing.md,
   },
   titleRow: {
     minHeight: 44,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: spacing.md,
   },
   title: {
@@ -104,21 +109,21 @@ const styles = StyleSheet.create({
     color: colours.ink,
     fontSize: 24,
     lineHeight: 30,
-    fontWeight: '900',
+    fontWeight: "900",
   },
   closeButton: {
     width: 38,
     height: 38,
     borderRadius: radii.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: colours.background,
   },
   closeText: {
     color: colours.ink,
     fontSize: 27,
     lineHeight: 29,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   content: {
     paddingTop: spacing.md,
