@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
@@ -26,11 +27,34 @@ import { WorkspaceProvider, useWorkspace } from "./src/store/WorkspaceContext";
 import { colours } from "./src/theme";
 import { TabKey } from "./src/types";
 
+const TAB_STORAGE_KEY = "@homebridge/active-tab-v1";
+
 function AppShell() {
   const [tab, setTab] = useState<TabKey>("today");
   const { state } = useApp();
   const insets = useSafeAreaInsets();
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem(TAB_STORAGE_KEY)
+      .then((saved) => {
+        if (
+          saved === "today" ||
+          saved === "calendar" ||
+          saved === "things" ||
+          saved === "handover" ||
+          saved === "child" ||
+          saved === "inbox"
+        ) {
+          setTab(saved);
+        }
+      })
+      .catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    void AsyncStorage.setItem(TAB_STORAGE_KEY, tab);
+  }, [tab]);
 
   useEffect(() => {
     const shown = Keyboard.addListener("keyboardDidShow", () => setKeyboardVisible(true));

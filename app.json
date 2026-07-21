@@ -3,7 +3,7 @@
     "name": "HomeBridge",
     "slug": "homebridge-coparenting",
     "scheme": "homebridge",
-    "version": "0.9.1",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -43,7 +43,7 @@
       },
       "predictiveBackGestureEnabled": true,
       "softwareKeyboardLayoutMode": "resize",
-      "versionCode": 14,
+      "versionCode": 15,
       "permissions": [
         "CAMERA",
         "READ_MEDIA_IMAGES"

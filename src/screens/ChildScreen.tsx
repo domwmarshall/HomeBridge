@@ -1,3 +1,4 @@
+import * as Clipboard from "expo-clipboard";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -35,6 +36,7 @@ import {
   MedicalItem,
   MedicalItemInput,
   PickedPhoto,
+  PendingInvite,
 } from "../types";
 import { daysUntil, formatDay, formatTime } from "../utils/format";
 
@@ -90,7 +92,7 @@ export function ChildScreen() {
 
   const [sheet, setSheet] = useState<OpenSheet>(null);
   const [busy, setBusy] = useState(false);
-  const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [createdInvite, setCreatedInvite] = useState<PendingInvite | null>(null);
   const [showExpiryPicker, setShowExpiryPicker] = useState(false);
   const [editingMedicalId, setEditingMedicalId] = useState<string | null>(null);
   const [profile, setProfile] = useState<ChildProfileInput>({
@@ -252,8 +254,8 @@ export function ChildScreen() {
   const makeInvite = async () => {
     setBusy(true);
     try {
-      const code = await createInvite(otherParent);
-      setInviteCode(code);
+      const invite = await createInvite(otherParent);
+      setCreatedInvite(invite);
       setSheet("invite");
     } catch (caught) {
       Alert.alert(
@@ -268,11 +270,17 @@ export function ChildScreen() {
     }
   };
 
-  const shareInvite = async () => {
-    if (!inviteCode) return;
+  const shareInvite = async (invite = createdInvite) => {
+    if (!invite?.code) return;
     await Share.share({
-      message: `Join our HomeBridge household with this one-time code: ${inviteCode}\n\nThe code expires in 7 days and can be used once.`,
+      message: `Join our HomeBridge household with this one-time code: ${invite.code}\n\nThe code expires ${formatDay(invite.expiresAt)} and can be used once.`,
     });
+  };
+
+  const copyInvite = async (invite: PendingInvite) => {
+    if (!invite.code) return;
+    await Clipboard.setStringAsync(invite.code);
+    Alert.alert("Invite code copied", "You can now paste it into a private message to the other parent.");
   };
 
   const revokePendingInvite = (inviteId: string, parentLabel?: string) => {
@@ -437,24 +445,41 @@ export function ChildScreen() {
             <View style={styles.pendingInvites}>
               <Text style={styles.pendingTitle}>Pending invitation</Text>
               {pendingInvites.map((invite) => (
-                <View key={invite.id} style={styles.pendingRow}>
-                  <View style={styles.pendingCopy}>
-                    <Text style={styles.pendingName}>
-                      {invite.parentLabel ?? "Parent"} invite
-                    </Text>
-                    <Text style={styles.pendingMeta}>
-                      Expires {formatDay(invite.expiresAt)}
-                    </Text>
+                <View key={invite.id} style={styles.pendingInviteCard}>
+                  <View style={styles.pendingRow}>
+                    <View style={styles.pendingCopy}>
+                      <Text style={styles.pendingName}>
+                        {invite.parentLabel ?? "Parent"} invite
+                      </Text>
+                      <Text style={styles.pendingMeta}>
+                        Expires {formatDay(invite.expiresAt)}
+                      </Text>
+                    </View>
+                    {workspaceRole === "owner" ? (
+                      <Pressable
+                        onPress={() =>
+                          revokePendingInvite(invite.id, invite.parentLabel)
+                        }
+                      >
+                        <Text style={styles.removeMember}>Revoke</Text>
+                      </Pressable>
+                    ) : null}
                   </View>
-                  {workspaceRole === "owner" ? (
-                    <Pressable
-                      onPress={() =>
-                        revokePendingInvite(invite.id, invite.parentLabel)
-                      }
-                    >
-                      <Text style={styles.removeMember}>Revoke</Text>
-                    </Pressable>
-                  ) : null}
+                  {invite.code ? (
+                    <>
+                      <Text selectable style={styles.inlineInviteCode}>{invite.code}</Text>
+                      <View style={styles.inviteActionRow}>
+                        <Pressable style={styles.inviteMiniButton} onPress={() => void copyInvite(invite)}>
+                          <Text style={styles.inviteMiniText}>Copy code</Text>
+                        </Pressable>
+                        <Pressable style={styles.inviteMiniButton} onPress={() => void shareInvite(invite)}>
+                          <Text style={styles.inviteMiniText}>Share</Text>
+                        </Pressable>
+                      </View>
+                    </>
+                  ) : (
+                    <Text style={styles.pendingMeta}>Created before v1.0. Revoke and generate a new visible code.</Text>
+                  )}
                 </View>
               ))}
             </View>
@@ -504,6 +529,11 @@ export function ChildScreen() {
                 ? `Previously loaded records remain visible during a temporary connection loss.${lastSyncedAt ? ` Last updated ${formatDay(lastSyncedAt)} at ${formatTime(lastSyncedAt)}.` : ""}`
                 : "Demo changes remain only on this device."
             }
+          />
+          <SettingRow
+            icon="ℹ️"
+            title="App version"
+            body="HomeBridge 1.0.0 · native Android release"
           />
           {syncError ? (
             <View style={styles.syncError}>
@@ -689,17 +719,16 @@ export function ChildScreen() {
         onClose={() => setSheet(null)}
       >
         <Text style={styles.inviteExplanation}>
-          Send this one-time code privately. It expires after seven days and can
-          only be used once.
+          Send this one-time code privately. It stays visible on this page until it is used, revoked or expires.
         </Text>
         <View style={styles.codeBox}>
           <Text selectable style={styles.inviteCode}>
-            {inviteCode}
+            {createdInvite?.code}
           </Text>
         </View>
         <PrimaryButton
           label="Share invite code"
-          onPress={() => void shareInvite()}
+          onPress={() => void shareInvite(createdInvite ?? undefined)}
         />
         <View style={styles.secondaryAction}>
           <SecondaryButton label="Done" onPress={() => setSheet(null)} />
@@ -921,6 +950,36 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: spacing.sm,
+  },
+  pendingInviteCard: {
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colours.line,
+  },
+  inlineInviteCode: {
+    color: colours.tealDark,
+    fontSize: 24,
+    letterSpacing: 3,
+    fontWeight: "900",
+    marginTop: spacing.sm,
+  },
+  inviteActionRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  inviteMiniButton: {
+    flex: 1,
+    minHeight: 38,
+    borderRadius: radii.md,
+    backgroundColor: colours.tealSoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  inviteMiniText: {
+    color: colours.tealDark,
+    fontSize: 12,
+    fontWeight: "900",
   },
   pendingCopy: { flex: 1 },
   pendingName: { color: colours.ink, fontWeight: "800", fontSize: 13 },

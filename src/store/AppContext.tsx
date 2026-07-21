@@ -108,7 +108,7 @@ interface AppContextValue {
   addMedicalItem: (input: MedicalItemInput) => Promise<void>;
   updateMedicalItem: (id: string, input: MedicalItemInput) => Promise<void>;
   deleteMedicalItem: (id: string) => Promise<void>;
-  createInvite: (parentLabel: ParentLabel) => Promise<string>;
+  createInvite: (parentLabel: ParentLabel) => Promise<PendingInvite>;
   revokeInvite: (inviteId: string) => Promise<void>;
   removeMember: (userId: string) => Promise<void>;
   refresh: () => Promise<void>;

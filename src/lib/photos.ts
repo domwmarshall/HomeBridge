@@ -20,7 +20,7 @@ function mimeFor(photo: PickedPhoto): string {
 
 export async function uploadPrivatePhoto(
   householdId: string,
-  folder: "items" | "medical" | "calendar",
+  folder: "items" | "medical" | "calendar" | "messages",
   photo: PickedPhoto,
 ): Promise<string> {
   if (!supabase) throw new Error("Supabase is not configured.");

@@ -2,9 +2,6 @@
 
 A private native Android co-parenting application built with Expo React Native and Supabase.
 
-Current release: **v0.8.0 — Reliable Dates and Two-Parent Beta**.
+Current release: **v1.0.0 — Messaging and Reliable Invitations**.
 
-Run `supabase/v0.8.0_patch.sql` before installing the v0.8.0 APK. See `README_v0.8.0.md` and `RELEASE_NOTES_v0.8.0.md` for the release scope.
-
-
-See `README_v0.9.0.md` for the current shared-inbox and safe-area pass.
+Run `supabase/v1.0.0_patch.sql` after the earlier HomeBridge migrations and before installing the v1.0.0 APK. See `README_v1.0.0.md` and `RELEASE_NOTES_v1.0.0.md` for the release scope.

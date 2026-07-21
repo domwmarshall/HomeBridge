@@ -33,7 +33,8 @@ export type NotificationKind =
   | "medical"
   | "member"
   | "handover"
-  | "system";
+  | "system"
+  | "message";
 
 export interface HouseholdNotification {
   id: string;
@@ -69,6 +70,45 @@ export interface ItemRequest {
   respondedAt?: string;
 }
 
+
+export type MessageContextType =
+  | "calendar_event"
+  | "item"
+  | "handover"
+  | "medical_item"
+  | "care_change_request";
+
+export interface HouseholdMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  body?: string;
+  replyToId?: string;
+  replyPreview?: string;
+  attachmentPath?: string;
+  attachmentUrl?: string;
+  attachmentName?: string;
+  attachmentMimeType?: string;
+  contextType?: MessageContextType;
+  contextId?: string;
+  contextLabel?: string;
+  createdAt: string;
+  editedAt?: string;
+  deletedAt?: string;
+  readByOther: boolean;
+  readByMe: boolean;
+}
+
+export interface NewHouseholdMessage {
+  body?: string;
+  replyToId?: string;
+  attachment?: PickedPhoto;
+  contextType?: MessageContextType;
+  contextId?: string;
+  contextLabel?: string;
+  clientId: string;
+}
+
 export interface PickedPhoto {
   uri: string;
   fileName?: string | null;
@@ -80,6 +120,7 @@ export interface PickedPhoto {
 export interface PendingInvite {
   id: string;
   parentLabel?: ParentLabel;
+  code?: string;
   expiresAt: string;
   createdAt: string;
 }
@@ -101,7 +142,7 @@ export interface Workspace {
   role: HouseholdMember["role"];
   members: HouseholdMember[];
   pendingInvites: PendingInvite[];
-  createInvite: (parentLabel: ParentLabel) => Promise<string>;
+  createInvite: (parentLabel: ParentLabel) => Promise<PendingInvite>;
   revokeInvite: (inviteId: string) => Promise<void>;
   refreshWorkspace: () => Promise<void>;
 }

@@ -2,12 +2,12 @@ import React, { PropsWithChildren } from "react";
 import {
   ActivityIndicator,
   Pressable,
-  StyleProp,
   StyleSheet,
   Text,
   TextInput,
   TextInputProps,
   View,
+  StyleProp,
   ViewStyle,
 } from "react-native";
 import { colours, radii, spacing } from "../theme";
