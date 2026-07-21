@@ -1,4 +1,4 @@
-export type TabKey = "today" | "calendar" | "things" | "handover" | "child";
+export type TabKey = "today" | "calendar" | "things" | "handover" | "child" | "inbox";
 
 export type ParentLabel = "Dad" | "Mum";
 export type ResponsibleParent = ParentLabel | "Both";
@@ -25,6 +25,49 @@ export type SyncState = "local" | "connecting" | "synced" | "offline" | "error";
 export type CareChangeStatus =
   "pending" | "accepted" | "rejected" | "cancelled";
 export type NotificationPermission = "undetermined" | "granted" | "denied";
+
+export type NotificationKind =
+  | "calendar"
+  | "care_change"
+  | "item_request"
+  | "medical"
+  | "member"
+  | "handover"
+  | "system";
+
+export interface HouseholdNotification {
+  id: string;
+  kind: NotificationKind;
+  title: string;
+  body: string;
+  targetTab: TabKey;
+  entityType?: string;
+  entityId?: string;
+  actorId?: string;
+  actorName?: string;
+  createdAt: string;
+  readAt?: string;
+  requiresAction: boolean;
+}
+
+export type ItemRequestStatus =
+  | "pending"
+  | "packed"
+  | "declined"
+  | "cancelled";
+
+export interface ItemRequest {
+  id: string;
+  itemId: string;
+  itemName: string;
+  requestedBy: string;
+  requestedByName: string;
+  note?: string;
+  status: ItemRequestStatus;
+  createdAt: string;
+  respondedBy?: string;
+  respondedAt?: string;
+}
 
 export interface PickedPhoto {
   uri: string;

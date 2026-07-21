@@ -21,6 +21,7 @@ import {
 } from "../components/UI";
 import { errorMessage } from "../lib/errors";
 import { useApp } from "../store/AppContext";
+import { useCommunication } from "../store/CommunicationContext";
 import { colours, radii, spacing } from "../theme";
 import { formatDay, formatTime } from "../utils/format";
 
@@ -32,7 +33,9 @@ export function HandoverScreen() {
     completeHandover,
     addHandoverTask,
     deleteHandoverTask,
+    viewerUserId,
   } = useApp();
+  const { itemRequests, respondItemRequest } = useCommunication();
   const [confirmed, setConfirmed] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [newLabel, setNewLabel] = useState("");
@@ -44,6 +47,11 @@ export function HandoverScreen() {
   const essentialsReady = state.handoverTasks
     .filter((task) => task.essential)
     .every((task) => task.done);
+  const requestsForMe = itemRequests.filter(
+    (request) => request.status === "pending" &&
+      request.requestedBy !== viewerUserId &&
+      !state.handoverTasks.some((task) => task.itemId === request.itemId),
+  );
   const progress = state.handoverTasks.length
     ? done / state.handoverTasks.length
     : 0;
@@ -159,6 +167,47 @@ export function HandoverScreen() {
             </Text>
             <Text style={styles.plan}>{state.child.collectionPlan}</Text>
           </Card>
+
+          {requestsForMe.length ? (
+            <>
+              <SectionHeader title="Requests waiting" />
+              {requestsForMe.map((request) => (
+                <Card key={request.id} style={styles.requestCard}>
+                  <View style={styles.requestHeader}>
+                    <View style={styles.requestCopy}>
+                      <Text style={styles.requestTitle}>{request.itemName}</Text>
+                      <Text style={styles.requestBody}>
+                        {request.note ?? `${request.requestedByName} asked for this item.`}
+                      </Text>
+                    </View>
+                    <Pill label="Requested" tone="rose" />
+                  </View>
+                  <View style={styles.requestButtons}>
+                    <View style={styles.requestButton}>
+                      <PrimaryButton
+                        label="Add to checklist"
+                        onPress={() =>
+                          void respondItemRequest(request.id, "packed").catch((caught) =>
+                            Alert.alert("Could not add request", errorMessage(caught)),
+                          )
+                        }
+                      />
+                    </View>
+                    <View style={styles.requestButton}>
+                      <SecondaryButton
+                        label="Not available"
+                        onPress={() =>
+                          void respondItemRequest(request.id, "declined").catch((caught) =>
+                            Alert.alert("Could not respond", errorMessage(caught)),
+                          )
+                        }
+                      />
+                    </View>
+                  </View>
+                </Card>
+              ))}
+            </>
+          ) : null}
 
           <SectionHeader
             title="Transfer bag"
@@ -359,6 +408,13 @@ export function HandoverScreen() {
 }
 
 const styles = StyleSheet.create({
+  requestCard: { marginBottom: spacing.md, backgroundColor: colours.amberSoft, borderColor: "#E7D6B8" },
+  requestHeader: { flexDirection: "row", alignItems: "flex-start" },
+  requestCopy: { flex: 1, marginRight: spacing.md },
+  requestTitle: { color: colours.ink, fontSize: 16, fontWeight: "900" },
+  requestBody: { color: colours.muted, fontSize: 13, lineHeight: 19, marginTop: 4 },
+  requestButtons: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.lg },
+  requestButton: { flex: 1 },
   flex: { flex: 1, backgroundColor: colours.background },
   content: {
     padding: spacing.lg,

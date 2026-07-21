@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colours, radii, spacing } from "../theme";
 
 interface BottomSheetProps extends PropsWithChildren {
@@ -23,6 +24,7 @@ export function BottomSheet({
   onClose,
   children,
 }: BottomSheetProps) {
+  const insets = useSafeAreaInsets();
   return (
     <Modal
       visible={visible}
@@ -37,7 +39,7 @@ export function BottomSheet({
         keyboardVerticalOffset={0}
       >
         <Pressable style={styles.backdrop} onPress={onClose} />
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 22) }]}>
           <View style={styles.handle} />
           <View style={styles.titleRow}>
             {title ? <Text style={styles.title}>{title}</Text> : <View />}
@@ -87,7 +89,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     paddingTop: spacing.md,
     paddingHorizontal: spacing.xl,
-    paddingBottom: Platform.OS === "android" ? 22 : 34,
   },
   handle: {
     width: 42,

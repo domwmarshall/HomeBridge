@@ -12,6 +12,7 @@ import { AppHeader } from "../components/AppHeader";
 import { Card, Pill, PrimaryButton, SectionHeader } from "../components/UI";
 import { errorMessage } from "../lib/errors";
 import { useApp } from "../store/AppContext";
+import { useCommunication } from "../store/CommunicationContext";
 import { colours, radii, spacing } from "../theme";
 import { CalendarEvent, TabKey } from "../types";
 import {
@@ -42,6 +43,7 @@ export function TodayScreen({ navigate }: { navigate: (tab: TabKey) => void }) {
     addItemsToHandover,
     viewerName,
   } = useApp();
+  const { unreadCount, actionCount } = useCommunication();
   const now = Date.now();
   const upcoming = [...state.events]
     .filter((event) => +new Date(event.endsAt ?? event.startsAt) >= now)
@@ -120,6 +122,25 @@ export function TodayScreen({ navigate }: { navigate: (tab: TabKey) => void }) {
         title={`Hello, ${viewerName}`}
         subtitle={formatLongDate(new Date().toISOString())}
       />
+
+      {unreadCount ? (
+        <Pressable onPress={() => navigate("inbox")}>
+          <Card style={styles.inboxCard}>
+            <View style={styles.inboxIconWrap}>
+              <Text style={styles.inboxIconText}>✉</Text>
+            </View>
+            <View style={styles.inboxCopy}>
+              <Text style={styles.inboxTitle}>Shared inbox</Text>
+              <Text style={styles.inboxBody}>
+                {actionCount
+                  ? `${actionCount} update${actionCount === 1 ? "" : "s"} need your reply.`
+                  : `${unreadCount} unread update${unreadCount === 1 ? "" : "s"}.`}
+              </Text>
+            </View>
+            <Pill label={String(unreadCount)} tone={actionCount ? "rose" : "amber"} />
+          </Card>
+        </Pressable>
+      ) : null}
 
       <Card style={styles.hero}>
         <View style={styles.heroTop}>
@@ -269,6 +290,12 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
     backgroundColor: colours.background,
   },
+  inboxCard: { flexDirection: "row", alignItems: "center", marginBottom: spacing.md, borderColor: "#B6D9D4" },
+  inboxIconWrap: { width: 42, height: 42, borderRadius: 21, backgroundColor: colours.tealSoft, alignItems: "center", justifyContent: "center" },
+  inboxIconText: { color: colours.tealDark, fontSize: 20, fontWeight: "900" },
+  inboxCopy: { flex: 1, marginHorizontal: spacing.md },
+  inboxTitle: { color: colours.ink, fontSize: 15, fontWeight: "900" },
+  inboxBody: { color: colours.muted, fontSize: 12, marginTop: 3 },
   hero: { backgroundColor: colours.tealDark, borderColor: colours.tealDark },
   heroTop: { flexDirection: "row", alignItems: "center" },
   avatar: {

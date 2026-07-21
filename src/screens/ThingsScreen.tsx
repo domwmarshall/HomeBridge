@@ -22,6 +22,7 @@ import {
 } from "../components/UI";
 import { errorMessage } from "../lib/errors";
 import { useApp } from "../store/AppContext";
+import { useCommunication } from "../store/CommunicationContext";
 import { colours, radii, spacing } from "../theme";
 import {
   HouseholdLocation,
@@ -79,6 +80,7 @@ function blankForm(location: HouseholdLocation): ItemFormState {
 
 export function ThingsScreen() {
   const { state, addItem, updateItem, deleteItem } = useApp();
+  const { available: sharingAvailable, itemRequests, requestItem } = useCommunication();
   const [filter, setFilter] = useState<(typeof categories)[number]>("All");
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -98,6 +100,9 @@ export function ThingsScreen() {
     [state.items, filter, search],
   );
   const editingItem = state.items.find((item) => item.id === editingId);
+  const pendingRequest = editingId
+    ? itemRequests.find((request) => request.itemId === editingId && request.status === "pending")
+    : undefined;
 
   const openAdd = () => {
     setEditingId(null);
@@ -292,6 +297,9 @@ export function ThingsScreen() {
                     {item.neededAt ? (
                       <Pill label={`Needed: ${item.neededAt}`} tone="amber" />
                     ) : null}
+                    {itemRequests.some((request) => request.itemId === item.id && request.status === "pending") ? (
+                      <Pill label="Requested" tone="rose" />
+                    ) : null}
                   </View>
                 </View>
                 <Text style={styles.chevron}>›</Text>
@@ -411,6 +419,37 @@ export function ThingsScreen() {
             disabled={!form.name.trim()}
           />
         </View>
+        {editingId && sharingAvailable ? (
+          <View style={styles.secondaryAction}>
+            <SecondaryButton
+              label={pendingRequest ? "Request already waiting" : "Request for next handover"}
+              disabled={Boolean(pendingRequest) || busy}
+              onPress={() => {
+                if (!editingId || !editingItem) return;
+                Alert.alert(
+                  "Request this item?",
+                  `The other parent will be asked to add ${editingItem.name} to the next handover.`,
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Send request",
+                      onPress: () => {
+                        setBusy(true);
+                        requestItem(
+                          editingId,
+                          `Please add ${editingItem.name} to the next handover.`,
+                        )
+                          .then(() => Alert.alert("Request sent", "It is now in the shared inbox."))
+                          .catch((caught) => Alert.alert("Could not request item", errorMessage(caught)))
+                          .finally(() => setBusy(false));
+                      },
+                    },
+                  ],
+                );
+              }}
+            />
+          </View>
+        ) : null}
         {editingId ? (
           <View style={styles.secondaryAction}>
             <DangerButton
