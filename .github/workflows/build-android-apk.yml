@@ -12,12 +12,14 @@ concurrency:
 
 jobs:
   build-apk:
-    name: Build HomeBridge v1.0.0 release APK
+    name: Build HomeBridge v1.0.1 release APK
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
       CI: "1"
       EXPO_NO_TELEMETRY: "1"
+      EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
+      EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
 
     steps:
       - name: Check out source
@@ -36,6 +38,19 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+
+      - name: Verify embedded HomeBridge configuration
+        run: |
+          test -n "$EXPO_PUBLIC_SUPABASE_URL"
+          test -n "$EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+          case "$EXPO_PUBLIC_SUPABASE_URL" in
+            https://*.supabase.co) ;;
+            *) echo "Invalid Supabase URL"; exit 1 ;;
+          esac
+          case "$EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY" in
+            sb_publishable_*) ;;
+            *) echo "Invalid publishable key"; exit 1 ;;
+          esac
 
       - name: Install fresh dependencies
         run: |
@@ -86,14 +101,14 @@ jobs:
       - name: Prepare APK artifact
         run: |
           mkdir -p release
-          cp android/app/build/outputs/apk/release/app-release.apk release/HomeBridge-v1.0.0.apk
+          cp android/app/build/outputs/apk/release/app-release.apk release/HomeBridge-v1.0.1.apk
           cd release
-          sha256sum HomeBridge-v1.0.0.apk > HomeBridge-v1.0.0.apk.sha256
+          sha256sum HomeBridge-v1.0.1.apk > HomeBridge-v1.0.1.apk.sha256
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HomeBridge-Android-v1.0.0
+          name: HomeBridge-Android-v1.0.1
           path: release/*
           if-no-files-found: error
           retention-days: 30
